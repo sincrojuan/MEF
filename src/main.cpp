@@ -2,7 +2,8 @@
 #include <SoftwareSerial.h>
 
 //pines definidos:
-#define Rele 5
+#define ReleMotor 5       //Rele(NC) que controla la alimentacion del CDI de la moto
+#define ReleSistema 6     //Rele(NA) que controla la alimentacion de los modulos
 #define PulsCte 2
 SoftwareSerial BtModule(10, 11); //10 Rx, 11 Tx
 SoftwareSerial GSMModule(3, 4);
@@ -17,7 +18,8 @@ char DatoBT;
 
 void setup() {
   //Estado Pines:
-  pinMode(Rele, OUTPUT);
+  pinMode(ReleMotor, OUTPUT);
+  pinMode(ReleSistema, OUTPUT);
   pinMode(PulsCte, INPUT);
 
   //Interrupción externa:
@@ -37,24 +39,27 @@ void setup() {
 void loop() {
   switch(EstadoActual) {
     case EstadoDesactivado:
-    //'delay'
-      if(BtModule.available())
+      ActivarMotor();
+      digitalWrite(ReleSistema, LOW);
+      //'delay'
+      if(BtModule.available()){
+        DatoBT = BtModule.read();
         EstadoActual = LecturaBT;
+      }
     break;
 
     case EstadoEspera:
     //'delay'
-      if(BtModule.available())
+      if(BtModule.available()){
+        DatoBT = BtModule.read();
         EstadoActual = LecturaBT;
+      }
 
-      if(GSMModule.available())
+      else if(GSMModule.available())
         EstadoActual = LecturaSMS;
     break;
 
     case LecturaBT:
-      if(BtModule.available())
-        DatoBT = BtModule.read();
-
       switch(DatoBT){
         //
       }
@@ -65,7 +70,7 @@ void loop() {
     break;
 
     default:
-      EstadoActual = EstadoEspera;
+      EstadoActual = EstadoDesactivado;
     break; 
   }
 }
@@ -73,17 +78,19 @@ void loop() {
 
 //funciónes de acciones
 void ActivarSistema(){
-  //
+  EstadoActual = EstadoEspera;
+  digitalWrite(ReleSistema, HIGH);
 }
 void DeactivarSistema(){
-  //
+  EstadoActual = EstadoDesactivado;
+  digitalWrite(ReleSistema, LOW);
 }
 
 void ActivarMotor(){
-  digitalWrite(Rele, HIGH);
+  digitalWrite(ReleMotor, LOW);
 }
 void DeactivarMotor(){
-  digitalWrite(Rele, LOW);
+  digitalWrite(ReleMotor, HIGH);
 }
 
 void EnviarUbicación(){
