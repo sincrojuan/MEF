@@ -14,7 +14,7 @@ estadoMEF EstadoActual;
 
 //variables:
 volatile unsigned int Milisegundos = 0, Segundos = 0;
-char DatoBT;
+unsigned short int DatoBT;
 
 void setup() {
   //Estado Pines:
@@ -72,10 +72,24 @@ void loop() {
     case LecturaBT:
 
       switch(DatoBT){
-        //
+        case 0:
+          EstadoActual = EstadoDesactivado;
+        break;
+
+        case 1:
+          ActivarSistema();
+        break;
+
+        case 2:
+          ActivarMotor();
+          EstadoActual = EstadoEspera;
+        break;
+        
+        case 3:
+          ModoAhorro();
+          //EstadoActual = EstadoEspera;
+        break;
       }
-      
-      EstadoActual = EstadoEspera;
     break;
 
     case LecturaSMS:
