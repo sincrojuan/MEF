@@ -39,30 +39,43 @@ void setup() {
 void loop() {
   switch(EstadoActual) {
     case EstadoDesactivado:
+
       ActivarMotor();
       digitalWrite(ReleSistema, LOW);
-      //'delay'
-      if(BtModule.available()){
-        DatoBT = BtModule.read();
-        EstadoActual = LecturaBT;
+
+      if(Segundos >= 15){
+        Segundos = 0;
+
+        if(BtModule.available()){
+          DatoBT = BtModule.read();
+          EstadoActual = LecturaBT;
+        }
+
       }
     break;
 
     case EstadoEspera:
-    //'delay'
-      if(BtModule.available()){
-        DatoBT = BtModule.read();
-        EstadoActual = LecturaBT;
-      }
 
-      else if(GSMModule.available())
-        EstadoActual = LecturaSMS;
+      if(Segundos >= 15){
+        Segundos = 0;
+
+        if(BtModule.available()){
+          DatoBT = BtModule.read();
+          EstadoActual = LecturaBT;
+        }
+        else if(GSMModule.available())
+          EstadoActual = LecturaSMS;
+    
+      }
     break;
 
     case LecturaBT:
+
       switch(DatoBT){
         //
       }
+      
+      EstadoActual = EstadoEspera;
     break;
 
     case LecturaSMS:
@@ -76,7 +89,7 @@ void loop() {
 }
 
 
-//funciónes de acciones
+//funciónes de acciones/comandos
 void ActivarSistema(){
   EstadoActual = EstadoEspera;
   digitalWrite(ReleSistema, HIGH);
