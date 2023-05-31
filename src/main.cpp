@@ -19,15 +19,16 @@ typedef enum
   LecturaBT,
   LecturaSMS
 } estadoMEF;
+
 estadoMEF EstadoActual;
 
 // variables:
 volatile unsigned int Milisegundos = 0, Segundos = 0;
-unsigned short int DatoBT;
+char DatoBT;
 
 // Variables de SMS
 String numTelefono;
-String numeroPrincipal = "+5491167900710";
+String numeroPrincipal = "+5491135572199"; //"+5491167900710";
 String numerosAux[5];
 int numAux = 0;
 String pw = "12345";
@@ -36,12 +37,13 @@ String msj;
 bool ahorroFlag = false;
 
 //////////////////////////////////////////////////// SET UP ////////////////////////////////////////////////////
-void setup()
-{
+void setup(){
+  Serial.println("setup");
+
   // Estado Pines:
   pinMode(ReleMotor, OUTPUT);
   pinMode(ReleSistema, OUTPUT);
-  pinMode(PulsCte, INPUT);
+  pinMode(PulsCte, INPUT_PULLUP);
 
   // Interrupción externa:
   attachInterrupt(digitalPinToInterrupt(PulsCte), Interrumpido, RISING);
@@ -65,38 +67,44 @@ void setup()
   delay(100);
   GSMModule.println("AT+CNMI=2,2,0,0,0"); // Envia los SMS al puerto serie
   delay(100);
+
+  EstadoActual = EstadoDesactivado;
 }
 
 //////////////////////////////////////////////////// MAIN LOOP ////////////////////////////////////////////////////
 void loop()
 {
+  Serial.println("loop");
+  
   switch (EstadoActual)
   {
   case EstadoDesactivado:
-    ActivarMotor();
+    Serial.println("Desactivado");
+
+    digitalWrite(ReleMotor, HIGH);
     digitalWrite(ReleSistema, LOW);
 
-    if (Segundos >= 15)
-    {
+    if (Segundos >= 15){
       Segundos = 0;
 
       if (BtModule.available())
       {
         DatoBT = BtModule.read();
         EstadoActual = LecturaBT;
+        Serial.println("DatoBT Recibido");
       }
     }
     break;
 
   case EstadoEspera:
-    if (Segundos >= 15)
-    {
+    if (Segundos >= 15){
       Segundos = 0;
 
       if (BtModule.available())
       {
         DatoBT = BtModule.read();
         EstadoActual = LecturaBT;
+        Serial.println("DatoBT Recibido");
       }
       else if (GSMModule.available())
       {
@@ -106,27 +114,15 @@ void loop()
     break;
 
   case LecturaBT:
-    switch (DatoBT)
-    {
-    case 0:
-      EstadoActual = EstadoDesactivado;
-      break;
+    if(DatoBT == '0')EstadoActual = EstadoDesactivado;
 
-    case 1:
-      ActivarSistema();
-      break;
+    else if(DatoBT == '1'){ActivarSistema(); EstadoActual = EstadoEspera; Serial.println("Sist.Activ.");}
 
-    case 2:
-      ActivarMotor();
-      EstadoActual = EstadoEspera;
-      break;
+    else if(DatoBT == '2'){ActivarMotor(); EstadoActual = EstadoEspera;Serial.println("Motor Activ.");}
 
-    case 3:
-      ModoAhorro();
-      // EstadoActual = EstadoEspera;
-      break;
-    }
-    break;
+    else if(DatoBT == '3'){ModoAhorro();EstadoActual = EstadoEspera;Serial.println("Modo Ahorro");}
+
+  break;
 
   case LecturaSMS:
     msj = GSMModule.readString();
@@ -240,7 +236,7 @@ void selectOp(String numTelefono, int op)
     break;
 
   case 4:
-    EnviarUbicación();
+    EnviarUbicacion();
     break;
 
   default:
@@ -295,7 +291,7 @@ void ActivarMotor()
 }
 
 // Funcion para el envío del link de la ubicacion
-void EnviarUbicación()
+void EnviarUbicacion()
 {
   if (gpsModule.location.isValid() && gpsModule.location.isUpdated())
   {
@@ -335,12 +331,12 @@ String obtenerLink(float latitud, float longitud)
   return enlace;
 }
 
-// función interrupción(desbordamiento):
-ISR(TIMER_OVF_vect)
+  // función interrupción(desbordamiento):
+ISR(TIMER2_OVF_vect)
 {
   Milisegundos++;
 
-  if (Milisegundos = 1000)
+  if (Milisegundos == 1000)
   {
     Segundos++;
     Milisegundos = 0;
