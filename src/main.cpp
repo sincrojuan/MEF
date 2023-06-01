@@ -24,7 +24,7 @@ estadoMEF EstadoActual;
 
 // variables:
 volatile unsigned int Milisegundos = 0, Segundos = 0;
-char DatoBT;
+char DatoBT = '0';
 
 // Variables de SMS
 String numTelefono;
@@ -38,12 +38,13 @@ bool ahorroFlag = false;
 
 //////////////////////////////////////////////////// SET UP ////////////////////////////////////////////////////
 void setup(){
-  Serial.println("setup");
-
   // Estado Pines:
   pinMode(ReleMotor, OUTPUT);
   pinMode(ReleSistema, OUTPUT);
   pinMode(PulsCte, INPUT_PULLUP);
+
+  digitalWrite(ReleMotor, HIGH);
+  digitalWrite(ReleSistema, LOW);
 
   // Interrupción externa:
   attachInterrupt(digitalPinToInterrupt(PulsCte), Interrumpido, RISING);
@@ -60,7 +61,7 @@ void setup(){
   GSMModule.begin(9600);
   GPSModule.begin(9600);
 
-  delay(2000); // Espera que los modulos inicien correctamente
+  delay(1000); // Espera que los modulos inicien correctamente
 
   // Configuracion de GSM
   GSMModule.println("AT+CMGF=1"); // Setea el GSM en modo texto
@@ -74,35 +75,34 @@ void setup(){
 //////////////////////////////////////////////////// MAIN LOOP ////////////////////////////////////////////////////
 void loop()
 {
-  Serial.println("loop");
-  
   switch (EstadoActual)
   {
   case EstadoDesactivado:
-    Serial.println("Desactivado");
-
     digitalWrite(ReleMotor, HIGH);
     digitalWrite(ReleSistema, LOW);
 
-    if (Segundos >= 15){
+    if (Segundos >= 3){
       Segundos = 0;
+      Serial.println("Desactivado");
 
-      if (BtModule.available())
-      {
+      if (BtModule.available()){
         DatoBT = BtModule.read();
-        EstadoActual = LecturaBT;
+        BtModule.write(DatoBT);
         Serial.println("DatoBT Recibido");
+        EstadoActual = LecturaBT;
       }
     }
     break;
 
   case EstadoEspera:
-    if (Segundos >= 15){
+    if (Segundos >= 3){
       Segundos = 0;
-
+      Serial.println("Esperando");
+      
       if (BtModule.available())
       {
         DatoBT = BtModule.read();
+        Serial.println(DatoBT);
         EstadoActual = LecturaBT;
         Serial.println("DatoBT Recibido");
       }
@@ -114,14 +114,25 @@ void loop()
     break;
 
   case LecturaBT:
-    if(DatoBT == '0')EstadoActual = EstadoDesactivado;
+    if(DatoBT == '0'){EstadoActual = EstadoDesactivado; break;}
 
-    else if(DatoBT == '1'){ActivarSistema(); EstadoActual = EstadoEspera; Serial.println("Sist.Activ.");}
+    else if(DatoBT == '1'){ActivarSistema(); Serial.println("Sist.Activ.");}
 
-    else if(DatoBT == '2'){ActivarMotor(); EstadoActual = EstadoEspera;Serial.println("Motor Activ.");}
+    else if(DatoBT == '2'){ActivarMotor(); Serial.println("Motor Activ.");}
 
-    else if(DatoBT == '3'){ModoAhorro();EstadoActual = EstadoEspera;Serial.println("Modo Ahorro");}
+    else if(DatoBT == '3'){ModoAhorro(); Serial.println("Modo Ahorro");}
 
+    //Config. main Num.
+    else if(DatoBT == '4'){
+      Segundos = 0; 
+      while(Segundos < 30){
+        if (BtModule.available()) 
+          numeroPrincipal = BtModule.readString();
+          break;
+      }
+    }
+
+    EstadoActual = EstadoEspera;
   break;
 
   case LecturaSMS:
