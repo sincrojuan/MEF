@@ -1,14 +1,15 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <TinyGPSPlus.h>
+#include <AltSoftSerial.h>
 
 // pines definidos:
 #define ReleMotor 5   // Rele(NC) que controla la alimentacion del CDI de la moto
 #define ReleSistema 6 // Rele(NA) que controla la alimentacion de los modulos
 #define PulsCte 2
-SoftwareSerial BtModule(10, 11); // 10 Rx, 11 Tx
+AltSoftSerial BtModule;           //9 Rx, 8 Tx
 SoftwareSerial GSMModule(3, 4);  // 3 Rx, 4 Tx
-SoftwareSerial GPSModule(8, 9);
+SoftwareSerial GPSModule(10, 11); // 10 Rx, 11 Tx
 TinyGPSPlus gpsModule;
 
 // Estados Posibles (MEF):
