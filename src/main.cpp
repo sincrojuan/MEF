@@ -7,7 +7,7 @@
 #define ReleMotor 5   // Rele(NC) que controla la alimentacion del CDI de la moto
 #define ReleSistema 6 // Rele(NA) que controla la alimentacion de los modulos
 #define PulsCte 2
-AltSoftSerial BtModule;           //9 Rx, 8 Tx
+AltSoftSerial BtModule;           //8 Rx, 9 Tx
 SoftwareSerial GSMModule(3, 4);  // 3 Rx, 4 Tx
 SoftwareSerial GPSModule(10, 11); // 10 Rx, 11 Tx
 TinyGPSPlus gpsModule;
