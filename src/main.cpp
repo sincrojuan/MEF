@@ -82,50 +82,55 @@ void loop()
     digitalWrite(ReleMotor, HIGH);
     digitalWrite(ReleSistema, LOW);
 
-    if (Segundos >= 3){
-      Segundos = 0;
+    if (Segundos >= 2){
       Serial.println("Desactivado");
 
       if (BtModule.available()){
         DatoBT = BtModule.read();
         BtModule.write(DatoBT);
-        Serial.println("DatoBT Recibido");
+        BtModule.read();
+        BtModule.read();
         EstadoActual = LecturaBT;
       }
+
+      Segundos = 0;
     }
     break;
 
   case EstadoEspera:
-    if (Segundos >= 3){
-      Segundos = 0;
+    if (Segundos >= 2){
       Serial.println("Esperando");
       
       if (BtModule.available())
       {
         DatoBT = BtModule.read();
         Serial.println(DatoBT);
+        BtModule.read();
+        BtModule.read();
         EstadoActual = LecturaBT;
-        Serial.println("DatoBT Recibido");
       }
       else if (GSMModule.available())
       {
         EstadoActual = LecturaSMS;
       }
+      
+      Segundos = 0;
     }
     break;
 
   case LecturaBT:
     if(DatoBT == '0'){EstadoActual = EstadoDesactivado; break;}
 
-    else if(DatoBT == '1'){ActivarSistema(); Serial.println("Sist.Activ.");}
+    else if(DatoBT == '1'){EstadoActual = EstadoEspera; ActivarSistema(); Serial.println("Sist.Activ.");}
 
-    else if(DatoBT == '2'){ActivarMotor(); Serial.println("Motor Activ.");}
+    else if(DatoBT == '2'){EstadoActual = EstadoEspera; ActivarMotor(); Serial.println("Motor Activ.");}
 
-    else if(DatoBT == '3'){ModoAhorro(); Serial.println("Modo Ahorro");}
+    else if(DatoBT == '3'){EstadoActual = EstadoEspera; ModoAhorro(); Serial.println("Modo Ahorro");}
 
     //Config. main Num.
     else if(DatoBT == '4'){
       Segundos = 0; 
+      EstadoActual = EstadoEspera;
       while(Segundos < 30){
         if (BtModule.available()) 
           numeroPrincipal = BtModule.readString();
@@ -133,7 +138,11 @@ void loop()
       }
     }
 
-    EstadoActual = EstadoEspera;
+    else if(DatoBT != '0' && DatoBT != '1' && DatoBT != '2' && DatoBT != '3' && DatoBT != '4'){
+      Serial.println("Error");
+      EstadoActual = EstadoDesactivado;
+    }
+
   break;
 
   case LecturaSMS:
@@ -358,4 +367,5 @@ ISR(TIMER2_OVF_vect)
 void Interrumpido()
 {
   EstadoActual = EstadoDesactivado;
+  Serial.print("Desactiv forzosa");
 }
