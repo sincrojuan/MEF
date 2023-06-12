@@ -7,7 +7,7 @@
 #define ReleMotor 5   // Rele(NC) que controla la alimentacion del CDI de la moto
 #define ReleSistema 6 // Rele(NA) que controla la alimentacion de los modulos
 #define PulsCte 2
-AltSoftSerial BtModule;           //8 Rx, 9 Tx
+AltSoftSerial BtModule;       //8 Rx, 9 Tx
 SoftwareSerial GSMModule(3, 4);  // 3 Rx, 4 Tx
 SoftwareSerial GPSModule(10, 11); // 10 Rx, 11 Tx
 TinyGPSPlus gpsModule;
@@ -275,7 +275,7 @@ void enviarSMS(String numTelefono, String msj)
   delay(100);
   GSMModule.print(msj);
   delay(100);
-  GSMModule.println((char)26); // Envía el carácter CTRL+Z
+  GSMModule.write(26); // Envía el carácter CTRL+Z
   delay(100);
 }
 
