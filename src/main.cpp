@@ -269,14 +269,19 @@ void selectOp(String numTelefono, int op)
 // Enviador(????) de SMS
 void enviarSMS(String numTelefono, String msj)
 {
-  GSMModule.println("AT+CMGF=1");
-  delay(100);
-  GSMModule.println("AT+CMGS=\"" + numTelefono + "\"");
-  delay(100);
+  String trama = "AT+CMGS=\"+" + numTelefono + "\"\r";
+  Serial.println("Enviando el Mensaje ...");
+  GSMModule.print("AT+CMGF=1\r");
+  delay(100);    //Espera que se cumplan los comandos
+  GSMModule.print(trama);
+  delay(500);
   GSMModule.print(msj);
-  delay(100);
-  GSMModule.write(26); // Envía el carácter CTRL+Z
-  delay(100);
+  delay(500);
+  GSMModule.print((char)26);  //Es requerido para el correcto funcionamiento
+  delay(500);
+  GSMModule.println();
+  Serial.println("Texto Enviado.");
+  delay(500); 
 }
 
 // Funcion para activar o desactivar el sistema
